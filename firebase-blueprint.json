@@ -1,0 +1,25 @@
+{
+  "entities": {
+    "EquipmentBooking": {
+      "title": "Equipment Booking",
+      "description": "A record of an equipment booking for a specific date and slot.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date", "description": "The date of the booking (YYYY-MM-DD)" },
+        "slotId": { "type": "string", "description": "Identifier for the specific equipment or time slot (e.g., 'Camera 1')" },
+        "groupName": { "type": "string", "description": "Name of the booking group" },
+        "bookingType": { "type": "string", "description": "Type of booking (e.g., Portfolio, Product Photography)" },
+        "picName": { "type": "string", "description": "Point of Contact name" },
+        "picContact": { "type": "string", "description": "Point of Contact phone or email" },
+        "createdAt": { "type": "string", "description": "Server timestamp of when the booking was made" }
+      },
+      "required": ["date", "slotId", "groupName", "bookingType", "picName", "picContact"]
+    }
+  },
+  "firestore": {
+    "/bookings/{bookingId}": {
+      "schema": "EquipmentBooking",
+      "description": "Collection of all camera bookings."
+    }
+  }
+}

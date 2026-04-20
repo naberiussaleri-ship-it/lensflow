@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- Validation Blueprints ---
+    function isValidBooking(data) {
+      return data.keys().hasAll(['date', 'slotId', 'groupName', 'bookingType', 'picName', 'picContact', 'createdAt'])
+        && data.keys().size() == 7
+        && data.date is string && data.date.size() == 10
+        && data.slotId is string && data.slotId.size() <= 32
+        && data.groupName is string && data.groupName.size() >= 2 && data.groupName.size() <= 100
+        && data.bookingType is string && data.bookingType.size() <= 50
+        && data.picName is string && data.picName.size() >= 2 && data.picName.size() <= 100
+        && data.picContact is string && data.picContact.size() >= 5 && data.picContact.size() <= 100
+        && data.createdAt == request.time;
+    }
+
+    // --- Collections ---
+    match /bookings/{bookingId} {
+      // Students need to see who booked what to coordinate.
+      // User explicitly requested PII (PIC Name & Contact) to be visible on the homepage slots.
+      allow read: if true;
+      
+      // Allow anyone to book as a "self-sustaining student system".
+      // We enforce strict schema to prevent junk data.
+      allow create: if isValidBooking(incoming());
+      
+      // Prevent tampering with existing bookings. 
+      // In a production app, we would add owner-based or admin-based updates.
+      allow update, delete: if false;
+    }
+  }
+}
